@@ -109,8 +109,8 @@ if [ $role -eq 1 ]; then
     printf "scorebot-db" > /opt/sysconfig/etc/hostname
     syslink
     mysql_install_db --basedir=/usr --ldata=/var/lib/mysql --user=mysql
-    systemctl enable mysql
-    systemctl start mysql
+    systemctl enable mysqld
+    systemctl start mysqld
     mysql -u root -e "DELETE FROM mysql.user WHERE User='';"
     mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
     mysql -u root -e "DROP DATABASE IF EXISTS test;"
