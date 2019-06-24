@@ -50,6 +50,10 @@ if [ $role -eq 0 ] || [ $role -eq 2 ]; then
     rm /etc/httpd/conf/httpd.conf
 fi
 
+if [ -d /opt/sysconfig ]; then
+    mv /opt/sysconfig /opt/sysconfig.bak
+fi
+
 git clone https://github.com/iDigitalFlame/scorebot-sysconfig /opt/sysconfig
 printf "SYSCONFIG=/opt/sysconfig\n" > /etc/sysconfig.conf
 chmod 444 /etc/sysconfig.conf
@@ -61,6 +65,7 @@ printf "[Match]\nName=en0\n\n[Network]Address=$address\nDNS=$dns1\nDNS=dns$2\n\n
 printf "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"$mac\", NAME=\"en0\"" > /opt/sysconfig/etc/udev.d/rules.d/10-network.rules
 
 bash /opt/sysconfig/bin/relink /opt/sysconfig /
+bash /opt/sysconfig/bin/syslink
 syslink
 
 systemctl enable sshd.service
