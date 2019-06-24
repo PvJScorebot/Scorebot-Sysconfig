@@ -42,7 +42,7 @@ esac
 printf "[+] Updating system....\n"
 pacman -Syu --noconfirm
 printf "[+] Installing required packages..\n"
-pacman -S git net-tools --noconfirm
+pacman -S git net-tools pacman-contrib --noconfirm
 pacman -S $packages --noconfirm
 
 if [ $role -eq 0 ] || [ $role -eq 2 ]; then
@@ -61,10 +61,11 @@ printf "[Match]\nName=en0\n\n[Network]Address=$address\nDNS=$dns1\nDNS=dns$2\n\n
 printf "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"$mac\", NAME=\"en0\"" > /opt/sysconfig/etc/udev.d/rules.d/10-network.rules
 
 bash /opt/sysconfig/bin/relink /opt/sysconfig /
+syslink
 
 systemctl enable sshd.service
 systemctl enable fstrim.timer
-systemctl enable checkupdates.time
+systemctl enable checkupdates.timer
 systemctl enable checkupdates.service
 systemctl enable reflector.timer
 systemctl enable reflector.service
@@ -73,7 +74,7 @@ if [ $role -eq 0 ]; then
     printf "scorebot-core" > /opt/sysconfig/etc/hostname
     syslink
     mkdir /opt/scorebot/versions -p
-    python-virtualenv --always-copy /opt/scorebot/python
+    virtualenv --always-copy /opt/scorebot/python
     git clone https://github.com/iDigitalFlame/scorebot-core /opt/scorebot/version/release
     ln -s /opt/scorebot/version/release /opt/scorebot/current
     bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; unset PIP_USER; pip install -r requirements.txt"
