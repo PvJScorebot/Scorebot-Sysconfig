@@ -1,0 +1,11 @@
+[Unit]
+Description = Pacman Mirrorlist Update Service
+After       = network-online.target systemd-resolved.service
+Requires    = network-online.target systemd-resolved.service
+
+[Service]
+Type        = simple
+ExecStart   = /usr/bin/reflector --protocol https --latest 30 --number 20 --sort rate --threads 5 --country 'United States' --save /etc/pacman.d/mirrorlist
+
+[Install]
+RequiredBy  = multi-user.target

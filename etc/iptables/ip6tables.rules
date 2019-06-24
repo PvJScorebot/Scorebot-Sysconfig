@@ -1,0 +1,48 @@
+*filter
+:INPUT DROP [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT DROP [0:0]
+:BASE - [0:0]
+-A INPUT -j BASE
+-A OUTPUT -j BASE
+-A BASE -i lo -j ACCEPT
+-A BASE -s ::1/128 -d ::1/128 -j ACCEPT
+-A BASE -m state --state INVALID -j DROP
+-A BASE -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A BASE -p udp -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 1 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 2 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 3 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 4 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 133 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 134 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 135 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 136 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 137 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 141 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 142 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 148 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 149 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 130 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 131 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 132 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 143 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 151 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 152 -j ACCEPT
+-A BASE -s fe80::/10 -p ipv6-icmp -m icmp6 --icmpv6-type 153 -j ACCEPT
+-A BASE -p ipv6-icmp -m icmp6 --icmpv6-type 129 -m limit --limit 1/sec -j ACCEPT
+-A BASE -m icmp6 -p ipv6-icmp --icmpv6-type 128 -m limit --limit 1/sec -j ACCEPT
+-A OUTPUT -m tcp -p tcp --dport 53 -j ACCEPT
+-A OUTPUT -m udp -p udp --dport 53 -j ACCEPT
+-A OUTPUT -m tcp -p tcp --dport 80 -j ACCEPT
+-A OUTPUT -m udp -p udp --dport 80 -j ACCEPT
+-A OUTPUT -m tcp -p tcp --dport 443 -j ACCEPT
+-A OUTPUT -m udp -p udp --dport 443 -j ACCEPT
+-A OUTPUT -m udp -p udp --dport 123 -j ACCEPT
+-A OUTPUT -m tcp -p tcp --dport 11371 -j ACCEPT
+-A OUTPUT -m udp -p udp --dport 546:547 -j ACCEPT
+-A INPUT -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m tcp -p tcp --dport 443 -j ACCEPT
+-A INPUT -m tcp -p tcp --dport 3306 -j ACCEPT
+COMMIT

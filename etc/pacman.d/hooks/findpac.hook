@@ -1,0 +1,10 @@
+[Trigger]
+Type        = Package
+Target      = *
+Operation   = Remove
+Operation   = Upgrade
+
+[Action]
+Description = Looking for *.pac* files..
+When        = PostTransaction
+Exec        = /usr/bin/bash -c "find /etc/ -type f -name *.pac* -ls"

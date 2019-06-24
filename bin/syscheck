@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+# Preforms basic system information display checks.
+# iDigitalFlame
+
+pause() {
+    printf "Press ENTER to continue.."
+    read -s
+    printf "\n"
+}
+
+uname -a
+pause
+systemctl --failed
+pause
+ifconfig
+pause
+netstat -panut
+pause
+ps xfua
+pause
+df -h
+pause
+mount
+pause
+pacman -Syy 1> /dev/null
+printf "Orphaned Packages Found:\n"
+pacman -Qtdq
+printf "Done!\n"
+exit 0

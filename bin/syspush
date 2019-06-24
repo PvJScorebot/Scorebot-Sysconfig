@@ -1,0 +1,31 @@
+#!/usr/bin/bash
+# Attempts to push the latest configuration information to a Git repo.
+# iDigitalFlame
+
+source "/etc/sysconfig.conf" 2> /dev/null
+if [ $? -ne 0 ]; then
+    printf 'Could not locate or source "/etc/sysconfig.conf"!\n'
+    exit 1
+fi
+if [ -z "$SYSCONFIG" ]; then
+    printf 'Could not find System Configuration directory!\n'
+    exit 1
+fi
+if ! [ -d "$SYSCONFIG" ]; then
+    printf "System Configuration directory \"$SYSCONFIG\" does not exist!\n"
+    exit 1
+fi
+SYSCONFIG=${SYSCONFIG%/}
+if ! [ -d "${SYSCONFIG}/.git" ]; then
+    printf "System Configuration directory \"$SYSCONFIG\" is not a Git repo!\n"
+    exit 1
+fi
+
+if [ $UID -ne 0 ]; then
+    printf "Only root can do this!\n"
+    exit 1
+fi
+
+sh -c "cd ${SYSCONFIG}; git add -A .; git commit -m 'syspush'; git push"
+syslink
+exit 0

@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+# Attempts to update the system and relink any broken configuration links.
+# iDigitalFlame
+
+if [ $UID -ne 0 ]; then
+    printf "Only root can do this!\n"
+    exit 1
+fi
+
+pacman -Syu
+syslink
+systemctl start checkupdates.service
+exit 0

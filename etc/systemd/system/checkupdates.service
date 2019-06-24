@@ -1,0 +1,11 @@
+[Unit]
+Description = Check Updates Status Service
+After       = network-online.target
+Requires    = network-online.target
+
+[Service]
+Type        = simple
+ExecStart   = /usr/bin/bash -c "checkupdates > /var/run/updates.list"
+
+[Install]
+WantedBy    = multi-user.target

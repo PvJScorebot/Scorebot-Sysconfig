@@ -1,0 +1,99 @@
+#!/usr/bin/bash
+# Relinks files to their respective directories.
+# iDigitalFlame
+
+DEBUG=0
+
+if [ $# -ne 2 ]; then
+    printf "relink <config source> <config target> [debug]\n"
+    exit 1
+fi
+
+if [ $# -eq 3 ]; then
+    DEBUG=1
+fi
+
+list() {
+    if [ $# -ne 2 ]; then
+        return 1
+    fi
+    fc=${1%/}
+    ft=${2%/}
+    fl=$(find "$fc" -type f -print)
+    for file in $fl; do
+        fp=$(printf "$file" | awk "{gsub(\"${fc}\", \"\"); print \$1}")
+        if ! [ -z $(echo $fp | grep -vE '\.(nlk|nolink)$' | grep -vE '^\/\.git(\/|ignore$|config$)' | grep -vE '^\/(LICENSE|license)$' | grep -vE '^\/[a-zA-Z0-9_.]+\.(md|MD|code-workspace)$') ]; then
+            check "$ft$fp" "$fc$fp"
+        fi
+    done
+    return 0
+}
+
+link() {
+    if [ $# -ne 2 ]; then
+        return 1
+    fi
+    rm -f "$1" 2> /dev/null
+    fd=$(dirname "$1")
+    if ! [ -d "$fd" ]; then
+        printf "Making $fd\n"
+        mkdir -p "$fd" 2> /dev/null
+        if [ $? -ne 0 ]; then
+            panic "Cannot create directory \"$fd\"!"
+        fi
+        if [ $UID -eq 0 ]; then
+            chmod 555 "$fd"
+        else
+            chmod 755 "$fd"
+        fi
+    fi
+    ln -s "$2" "$1"
+    if [ $? -ne 0 ]; then
+        panic "Could not link \"$1\" to \"$2\"!"
+    fi
+    printf "[+] Relinked \"$1\" to \"$2\".\n"
+    return 0
+}
+
+check() {
+    if [ $# -ne 2 ]; then
+        return 1
+    fi
+    if [ $DEBUG -eq 1 ]; then
+        printf "[+] Checking \"$1\".. \n"
+    fi
+    if ! [ -L "$1" ]; then
+        printf "File \"$1\" is invalid, updating!\n"
+        link "$1" "$2"
+    else
+        fl=$(ls -al "$1" | awk '{print $11}')
+        if ! [[ "$fl" == "$2" ]]; then
+            printf "File \"$1\" is invalid, updating!\n"
+            link "$1" "$2"
+        else
+            if [ $DEBUG -eq 1 ]; then
+                printf "File \"$1\" is valid!\n"
+            fi
+        fi
+    fi
+    return 0
+}
+
+panic() {
+    printf "[!] $1\n"
+    exit 1
+}
+
+if ! [ -d "$1" ]; then
+    panic "Config source \"$1\" does not exist!"
+fi
+
+if ! [ -d "$2" ]; then
+    mkdir -p "$2"
+    if [ $? -ne 0 ]; then
+        panic "Could not create target directory \"$2\"!"
+    fi
+fi
+
+list "$1" "$2"
+exit 0

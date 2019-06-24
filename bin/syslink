@@ -1,0 +1,76 @@
+#!/usr/bin/bash
+# Wrapper and permissions fix-er for "relink".
+# iDigitalFlame
+
+source "/etc/sysconfig.conf" 2> /dev/null
+if [ $? -ne 0 ]; then
+    printf 'Could not locate or source "/etc/sysconfig.conf"!\n'
+    exit 1
+fi
+if [ -z "$SYSCONFIG" ]; then
+    printf 'Could not find System Configuration directory!\n'
+    exit 1
+fi
+if ! [ -d "$SYSCONFIG" ]; then
+    printf "System Configuration directory \"$SYSCONFIG\" does not exist!\n"
+    exit 1
+fi
+SYSCONFIG=${SYSCONFIG%/}
+
+if [ $UID -ne 0 ]; then
+    printf "Only root can do this!\n"
+    exit 1
+fi
+
+relink "$SYSCONFIG" /
+
+pacman -Qeq 1> "${SYSCONFIG}/packages.md"
+cp /etc/fstab "${SYSCONFIG}/etc/fstab.nlk"
+
+chown -R root:root "$SYSCONFIG"
+chmod -R 555 "$SYSCONFIG"
+
+find "$SYSCONFIG" -type f -exec chmod 444 {} \;
+find "$SYSCONFIG" -type d -exec chmod 555 {} \;
+
+chmod -R 555 "${SYSCONFIG}/bin"
+chmod -R 555 "${SYSCONFIG}/etc/profile.d"
+chmod -R 500 "${SYSCONFIG}/etc/syscheck.d"
+
+chmod 555 "${SYSCONFIG}/etc/ssh"
+chmod 500 "${SYSCONFIG}/etc/sysctl.d"
+chmod 500 "${SYSCONFIG}/etc/iptables"
+chmod 500 "${SYSCONFIG}/etc/modprobe.d"
+chmod 500 "${SYSCONFIG}/etc/pacman.d/hooks"
+chmod 400 "${SYSCONFIG}/etc/mkinitcpio.conf"
+chmod 440 "${SYSCONFIG}/etc/ssh/sshd_config"
+chmod 500 "${SYSCONFIG}/etc/security/limits.d"
+chmod 400 "${SYSCONFIG}/etc/sysctl.d/kernel.conf"
+chmod 400 "${SYSCONFIG}/etc/systemd/coredump.conf"
+chmod 400 "${SYSCONFIG}/etc/iptables/iptables.rules"
+chmod 400 "${SYSCONFIG}/etc/iptables/ip6tables.rules"
+chmod 400 "${SYSCONFIG}/etc/security/limits.d/limits.conf"
+
+chmod 400 ${SYSCONFIG}/etc/modprobe.d/*
+chmod 400 ${SYSCONFIG}/etc/pacman.d/hooks/*
+
+chmod -R 555 /etc/profile.d
+chmod -R 500 /etc/syscheck.d
+
+chmod 555 /etc/ssh
+chmod 500 /etc/sysctl.d
+chmod 500 /etc/iptables
+chmod 500 /etc/modprobe.d
+chmod 500 /etc/pacman.d/hooks
+chmod 500 /etc/security/limits.d
+
+if [ -d "/etc/syscheck.d" ]; then
+    for s in $(ls /etc/syscheck.d/*.sh); do
+        source "$s"
+    done
+fi
+
+printf "Broken Links Found:\n"
+find /etc/ -xtype l 2> /dev/null | grep -v "/proc" | grep -v "/tmp" | grep -v "/run"
+printf "Done!\n"
+exit 0

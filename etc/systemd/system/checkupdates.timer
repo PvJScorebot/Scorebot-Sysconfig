@@ -1,0 +1,9 @@
+[Unit]
+Description = Check Updates Status Timer
+
+[Timer]
+OnCalendar  = daily
+AccuracySec = 15m
+
+[Install]
+WantedBy    = timers.target
