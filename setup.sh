@@ -126,7 +126,9 @@ if [ $role -eq 1 ]; then
     read sbe_db_pass
     printf "[?] Scorebot server IP? "
     read sbe_core
-    mysql -u root -e "GRANT ALL ON scorebot_db.* TO 'scorebot'@'$sbe_core' IDENTIFIED BY '$sbe_db_pass';"
+    printf "127.0.0.1 scorebot-db\n$sbe_core scorebot-core\n" > /opt/sysconfig/etc/hosts
+    syslink
+    mysql -u root -e "GRANT ALL ON scorebot_db.* TO 'scorebot'@'scorebot-core' IDENTIFIED BY '$sbe_db_pass';"
     printf "[?] Mysql root password? "
     read django_pass
     mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('$django_pass') WHERE User='root';"
@@ -140,7 +142,7 @@ if [ $role -eq 2 ]; then
     printf "Scorebot IP to proxy? "
     read sbe_core
     ln -s /opt/sysconfig/etc/httpd/conf/roles/proxy.conf /etc/httpd/conf/scorebot-role.conf
-    printf "127.0.0.1 scorebotproxy\n$sbe_core scorebot-proxy\n" > /opt/sysconfig/etc/hosts
+    printf "127.0.0.1 scorebotproxy\n$sbe_core scorebot-core\n" > /opt/sysconfig/etc/hosts
     syslink
     systemctl enable httpd.service
     systemctl start httpd.service
