@@ -64,9 +64,9 @@ mac=$(ifconfig | grep ether | awk '{print $2}')
 printf "[Match]\nName=en0\n\n[Network]Address=$address\nDNS=$dns1\nDNS=dns$2\n\n[Route]\nGateway=$gateway\n" > /opt/sysconfig/etc/systemd/network/en0.network
 printf "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"$mac\", NAME=\"en0\"" > /opt/sysconfig/etc/udev.d/rules.d/10-network.rules
 
-bash /opt/sysconfig/bin/relink /opt/sysconfig /
-bash /opt/sysconfig/bin/syslink
-syslink
+bash /opt/sysconfig/bin/relink /opt/sysconfig / 2> /dev/null
+bash /opt/sysconfig/bin/syslink 2> /dev/null
+syslink 2> /dev/null
 
 systemctl enable sshd.service
 systemctl enable fstrim.timer
@@ -84,21 +84,26 @@ if [ $role -eq 0 ]; then
     ln -s /opt/scorebot/version/release /opt/scorebot/current
     bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; unset PIP_USER; pip install -r requirements.txt"
     printf "[?] Databse server IP? "
-    read db
+    read sbe_db
     printf "[?] Databse 'Scorebot' password? "
-    read pa
-    sed -ie 's/"HOST": "localhost",/"HOST": "scorebotdb",/g' /opt/scorebot/current/scorebot/settings.py
-    sed -ie "s/\"PASSWORD\": \"password\",/\"PASSWORD\": \"$pa\",/g" /opt/scorebot/current/scorebot/settings.py
+    read sbe_db_pass
+    sed -ie "s/\"PASSWORD\": \"password\",/\"PASSWORD\": \"$sbe_db_pass\",/g" /opt/scorebot/current/scorebot/settings.py
     rm /opt/scorebot/current/scorebot/*e
-    printf "127.0.0.1 scorebot\n$db scorebotdb\n" > /opt/sysconfig/etc/hosts
+    printf "127.0.0.1 scorebot\n$sbe_db scorebot-db\n" > /opt/sysconfig/etc/hosts
     syslink
     bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; env SBE_SQLLITE=0 python manage.py makemigrations scorebot_grid scorebot_core scorebot_game"
     bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; env SBE_SQLLITE=0 python manage.py migrate"
     printf "[?] Django superuser password? "
-    read dpa
-    bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; env SBE_SQLLITE=0 python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.create_superuser('$dpa', '', 'password')\""
+    read db_pass
+    bash -c "source /opt/scorebot/python/bin/activate; cd /opt/scorebot/current; env SBE_SQLLITE=0 python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.create_superuser('root', '', '$db_pass')\""
     printf "[+] Created default account \"root\" with supplied password!\n"
     ln -s /opt/sysconfig/etc/httpd/conf/roles/core.conf /etc/httpd/conf/scorebot-role.conf
+    ln -s /usr/lib/python3.*/site-packages/django/contrib/admin/static/admin /opt/scorebot/current/scorebot_static/admin
+    chown root:http -R /opt/scorebot/
+    chmod 550 -R /opt/scorebot/current/
+    mkdir -p /opt/scorebot/current/scorebot_media
+    chown http:http /opt/scorebot/current/scorebot_media
+    chmod 775 /opt/scorebot/current/scorebot_media
     systemctl enable httpd.service
     systemctl enable scorebot.service
     systemctl start httpd.service
@@ -118,13 +123,13 @@ if [ $role -eq 1 ]; then
     mysql -u root -e "FLUSH PRIVILEGES;"
     mysql -u root -e "CREATE DATABASE scorebot_db;"
     printf "[?] Scorebot user password? "
-    read pa
+    read sbe_db_pass
     printf "[?] Scorebot server IP? "
-    read sbeip
-    mysql -u root -e "GRANT ALL ON scorebot_db.* TO 'scorebot'@'$sbeip' IDENTIFIED BY '$pa';"
+    read sbe_core
+    mysql -u root -e "GRANT ALL ON scorebot_db.* TO 'scorebot'@'$sbe_core' IDENTIFIED BY '$sbe_db_pass';"
     printf "[?] Mysql root password? "
-    read mpa
-    mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('$mpa') WHERE User='root';"
+    read django_pass
+    mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('$django_pass') WHERE User='root';"
     printf "[+] Created default account \"root\" with supplied password!\n"
     systemctl restart mysqld
 fi
@@ -133,9 +138,9 @@ if [ $role -eq 2 ]; then
     printf "scorebot-proxy" > /opt/sysconfig/etc/hostname
     syslink
     printf "Scorebot IP to proxy? "
-    read proxy
+    read sbe_core
     ln -s /opt/sysconfig/etc/httpd/conf/roles/proxy.conf /etc/httpd/conf/scorebot-role.conf
-    printf "127.0.0.1 scorebotproxy\n$proxy scorebot-proxy\n" > /opt/sysconfig/etc/hosts
+    printf "127.0.0.1 scorebotproxy\n$sbe_core scorebot-proxy\n" > /opt/sysconfig/etc/hosts
     syslink
     systemctl enable httpd.service
     systemctl start httpd.service
