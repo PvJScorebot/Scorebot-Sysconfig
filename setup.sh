@@ -28,9 +28,9 @@ run() {
 setup() {
     log "Updating system.."
     run "pacman -Syy" 1> /dev/null
-    run "pacman -Syu --noconfirm"
+    run "pacman -Syu --noconfirm --noprogressbar"
     log "Installing required packages.."
-    run "pacman -S git net-tools pacman-contrib --noconfirm"
+    run "pacman -S git net-tools pacman-contrib --noconfirm --noprogressbar"
     log "Downloading sysconfig base from github.."
     if [ -d "$SYSCONFIG_DIR" ]; then
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
@@ -40,17 +40,20 @@ setup() {
     printf "SYSCONFIG=${SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
     chmod 444 "/etc/sysconfig.conf"
     log "Initilizing sysconfig.."
-    run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / 2> /dev/null"
-    run "bash \"${SYSCONFIG_DIR}/bin/syslink\" > /dev/null"
-    run "syslink > /dev/null"
+    run "rm /etc/hostname" 2> /dev/null
+    run "chmod 555 ${SYSCONFIG_DIR}/bin/relink"
+    run "chmod 555 ${SYSCONFIG_DIR}/bin/syslink"
+    run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / " 1> /dev/null
+    run "bash \"${SYSCONFIG_DIR}/bin/syslink\"" 1> /dev/null
+    run "syslink" 1> /dev/null
     log "Enabling required services.."
-    run "systemctl enable sshd.service > /dev/null"
-    run "systemctl enable fstrim.timer  > /dev/null"
-    run "systemctl enable checkupdates.timer > /dev/null"
-    run "systemctl enable checkupdates.service > /dev/null"
-    run "systemctl enable reflector.timer > /dev/null"
-    run "systemctl enable reflector.service > /dev/null"
-    run "locale-gen > /dev/null"
+    run "systemctl enable sshd.service" 2> /dev/null
+    run "systemctl enable fstrim.timer" 2> /dev/null
+    run "systemctl enable checkupdates.timer" 2> /dev/null
+    run "systemctl enable checkupdates.service" 2> /dev/null
+    run "systemctl enable reflector.timer" 2> /dev/null
+    run "systemctl enable reflector.service" 2> /dev/null
+    run "locale-gen" 1> /dev/null
     log "Finished basic setup.."
 }
 setup_db() {
@@ -69,13 +72,14 @@ setup_db() {
     printf "scorebot-database" > "${SYSCONFIG_DIR}/etc/hostname"
     printf "$db_scorebot_ip\tscorebot-core\n" >> "${SYSCONFIG_DIR}/etc/hosts"
     log "Installing database dependencies.."
-    run "pacman -S mariadb --noconfirm"
+    run "pacman -S mariadb --noconfirm --noprogressbar"
     log "Installing inital database.."
-    run "mysql_install_db --basedir=/usr --ldata=/var/lib/mysql --user=mysql 1> /dev/null"
-    run "systemctl enable mysqld > /dev/null"
-    run "systemctl start mysqld > /dev/null"
+    run "mysql_install_db --basedir=/usr --ldata=/var/lib/mysql --user=mysql" 1> /dev/null
+    run "systemctl enable mysqld" 2> /dev/null
+    run "systemctl start mysqld"
     log "Securing database.."
     run "mysql -u root -e \"DELETE FROM mysql.user WHERE User='';\""
+    run "mysql -u root -e \"DELETE FROM mysql.user WHERE User='mysql';\""
     run "mysql -u root -e \"DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');\""
     run "mysql -u root -e \"DROP DATABASE IF EXISTS test;\""
     run "mysql -u root -e \"DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';\""
@@ -83,7 +87,7 @@ setup_db() {
     run "mysql -u root -e \"CREATE DATABASE scorebot_db;\""
     run "mysql -u root -e \"GRANT ALL ON scorebot_db.* TO 'scorebot'@'scorebot-core' IDENTIFIED BY '$db_scorebot_pw';\""
     run "mysql -u root -e \"UPDATE mysql.global_priv SET priv=json_set(priv, '$.plugin', 'mysql_native_password', '$.authentication_string', PASSWORD('$db_root_pw')) WHERE User='root';\""
-    run "systemctl restart mysqld 1> /dev/null"
+    run "systemctl restart mysqld"
     log "Database setup complete, please configure the core component to use the supplied password!"
 }
 setup_core() {
@@ -102,35 +106,35 @@ setup_core() {
     printf "$proxy_scorcore_db_ipebot_ip\tscorebot-database\n" >> "${SYSCONFIG_DIR}/etc/hosts"
     log "MySQL Server IP is \"$core_db_ip\", this can be changed in the \"/etc/hosts\" file.."
     log "Installing core dependencies.."
-    run "pacman -S apache mod_wsgi python python-pip python-virtualenv python-django gcc mariadb-clients python-mysqlclient --noconfirm"
+    run "pacman -S apache mod_wsgi python python-pip python-virtualenv python-django gcc mariadb-clients python-mysqlclient --noconfirm --noprogressbar"
     run "mkdir -p \"${SCOREBOT_DIR}/versions\""
     log "Building virtual env.."
-    run "virtualenv --always-copy \"${SCOREBOT_DIR}/python\" 1> /dev/null"
+    run "virtualenv --always-copy \"${SCOREBOT_DIR}/python\"" 1> /dev/null
     run "git clone \"$SCOREBOT_URL\" \"${SCOREBOT_DIR}/version/release\""
     if ! [ -z "$SCOREBOT_BRANCH" ]; then
         run "cd \"${SCOREBOT_DIR}/version/release\"; git checkout $SCOREBOT_BRANCH"
     fi
-    run "ln -s \"${SCOREBOT_DIR}/version/release\" \"${SCOREBOT_DIR}/current\""
+    run "ln -s \"${SCOREBOT_DIR}/version/release\" \"${SCOREBOT_DIR}/current\"" 1> /dev/null
     log "Installing PIP requirements.."
-    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; unset PIP_USER; pip install -r requirements.txt 1> /dev/null"
+    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; unset PIP_USER; pip install -r requirements.txt" 1> /dev/null
     run "sed -ie 's/\"PASSWORD\": \"password\",/\"PASSWORD\": \"$core_db_pw\",/g' \"${SCOREBOT_DIR}/current/scorebot/settings.py\""
     run "rm ${SCOREBOT_DIR}/current/scorebot/*e"
     log "Attempting to push migrations to database server \"$core_db_ip\".."
-    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; env SBE_SQLLITE=0 python manage.py makemigrations scorebot_grid scorebot_core scorebot_game"
-    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; env SBE_SQLLITE=0 python manage.py migrate"
+    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; env SBE_SQLLITE=0 python manage.py makemigrations scorebot_grid scorebot_core scorebot_game" 1> /dev/null
+    run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; env SBE_SQLLITE=0 python manage.py migrate" 1> /dev/null
     run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; env SBE_SQLLITE=0 python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.create_superuser('root', '', '$core_django_pw')\""
     log "Created Django admin account \"root\" with supplied password!"
-    run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/core.conf\" \"/etc/httpd/conf/scorebot-role.conf\""
-    run "ln -s /usr/lib/python3.*/site-packages/django/contrib/admin/static/admin \"${SCOREBOT_DIR}/current/scorebot_static/admin\""
+    run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/core.conf\" \"/etc/httpd/conf/scorebot-role.conf\"" 1> /dev/null
+    run "ln -s /usr/lib/python3.*/site-packages/django/contrib/admin/static/admin \"${SCOREBOT_DIR}/current/scorebot_static/admin\"" 1> /dev/null
     run "chown root:http -R \"${SCOREBOT_DIR}\""
     run "chmod 550 -R \"${SCOREBOT_DIR}/currebt\""
     run "mkdir -p \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chown http:http \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chmod 775 \"${SCOREBOT_DIR}/current/scorebot_media\""
-    run "systemctl enable httpd.service > /dev/null"
-    run "systemctl enable scorebot.service > /dev/null"
-    run "systemctl start httpd.service > /dev/null"
-    run "systemctl start scorebot.service > /dev/null"
+    run "systemctl enable httpd.service" 2> /dev/null
+    run "systemctl enable scorebot.service" 2> /dev/null
+    run "systemctl start httpd.service"
+    run "systemctl start scorebot.service"
     log "Core setup complete!"
 }
 setup_proxy() {
@@ -143,11 +147,11 @@ setup_proxy() {
     printf "$proxy_scorebot_ip\tscorebot-core\n" >> "${SYSCONFIG_DIR}/etc/hosts"
     log "Scorebot IP is \"$proxy_scorebot_ip\", this can be changed in the \"/etc/hosts\" file.."
     log "Installing proxy dependencies.."
-    run "pacman -S apache --noconfirm"
+    run "pacman -S apache --noconfirm --noprogressbar"
     log "Enabling and starting Apache proxy..."
-    run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/proxy.conf\" \"/etc/httpd/conf/scorebot-role.conf\" 1> /dev/null"
-    run "systemctl enable httpd.service > /dev/null"
-    run "systemctl start httpd.service > /dev/null"
+    run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/proxy.conf\" \"/etc/httpd/conf/scorebot-role.conf\"" 1> /dev/null
+    run "systemctl enable httpd.service" 2> /dev/null
+    run "systemctl start httpd.service"
     log "Proxy setup complete, please ensure to configure the core component!"
 }
 
