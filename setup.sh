@@ -36,6 +36,7 @@ setup() {
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
     fi
     run "git clone \"$SYSCONFIG_URL\" \"$SYSCONFIG_DIR\""
+    run "rm -rf \"${SYSCONFIG_DIR}/.git\""
     printf "SYSCONFIG=${SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
     chmod 444 "/etc/sysconfig.conf"
     log "Initilizing sysconfig.."
