@@ -39,7 +39,7 @@ setup() {
     printf "SYSCONFIG={$SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
     chmod 444 "/etc/sysconfig.conf"
     log "Initilizing sysconfig.."
-    run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"$SYSCONFIG_DIR\" / 2> /dev/null"
+    run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / 2> /dev/null"
     run "bash \"${SYSCONFIG_DIR}/bin/syslink\" > /dev/null"
     run "syslink 1> /dev/null 2> /dev/null"
     log "Enabling required services.."
