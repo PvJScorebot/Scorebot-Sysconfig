@@ -41,7 +41,7 @@ setup() {
     log "Initilizing sysconfig.."
     run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / 2> /dev/null"
     run "bash \"${SYSCONFIG_DIR}/bin/syslink\" > /dev/null"
-    run "syslink 1> /dev/null 2> /dev/null"
+    run "syslink > /dev/null"
     log "Enabling required services.."
     run "systemctl enable sshd.service > /dev/null"
     run "systemctl enable fstrim.timer  > /dev/null"
@@ -56,7 +56,7 @@ setup_db() {
     db_root_pw=""
     db_scorebot_pw=""
     db_scorebot_ip=""
-    while [ -z "$db_root_pw" ] || [ -z "$db_scorebot_pw" ] || [ -z "$db_scorebot_ip "]; do
+    while [ -z "$db_root_pw" ] || [ -z "$db_scorebot_pw" ] || [ -z "$db_scorebot_ip" ]; do
         printf "MySQL root password? "
         read db_root_pw
         printf "MySQL scorebot password? "
@@ -81,7 +81,7 @@ setup_db() {
     run "mysql -u root -e \"FLUSH PRIVILEGES;\""
     run "mysql -u root -e \"CREATE DATABASE scorebot_db;\""
     run "mysql -u root -e \"GRANT ALL ON scorebot_db.* TO 'scorebot'@'scorebot-core' IDENTIFIED BY '$db_scorebot_pw';\""
-    run "mysql -u root -e \"SET PASSWORD FOR 'root'@'localhost' = PASSWORD('$db_root_pw')\""
+    run "mysql -u root -e \"UPDATE mysql.global_priv SET priv=json_set(priv, '$.plugin', 'mysql_native_password', '$.authentication_string', PASSWORD('$db_root_pw')) WHERE User='root';\""
     run "systemctl restart mysqld 1> /dev/null"
     log "Database setup complete, please configure the core component to use the supplied password!"
 }
