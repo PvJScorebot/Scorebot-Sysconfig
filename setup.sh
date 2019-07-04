@@ -19,7 +19,7 @@ run() {
     fi
     bash -c "$1; exit \$?"
     if [ $? -ne 0 ]; then
-        printf '[!] Command \"$1\" did not exit with zero, quitting!\n'
+        printf "[!] Command \"$1\" did not exit with zero, quitting!\n"
         exit 1
     fi
     return 1
@@ -31,7 +31,7 @@ setup() {
     run "pacman -Syu --noconfirm"
     log "Installing required packages.."
     run "pacman -S git net-tools pacman-contrib --noconfirm"
-    run "Downloading sysconfig base from github.."
+    log "Downloading sysconfig base from github.."
     if [ -d "$SYSCONFIG_DIR" ]; then
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
     fi
@@ -49,6 +49,7 @@ setup() {
     run "systemctl enable checkupdates.service > /dev/null"
     run "systemctl enable reflector.timer > /dev/null"
     run "systemctl enable reflector.service > /dev/null"
+    run "locale-gen > /dev/null"
     log "Finished basic setup.."
 }
 setup_db() {
