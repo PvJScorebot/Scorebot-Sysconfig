@@ -23,7 +23,7 @@ run() {
     if [ $# -ne 1 ]; then
         return 0
     fi
-    if [ VERBOSE -eq 1 ]; then
+    if [ $VERBOSE -eq 1 ]; then
         printf "[V] Running \"$1\"\n"
     fi
     bash -c "$1; exit \$?"
