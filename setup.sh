@@ -45,6 +45,14 @@ setup() {
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
     fi
     run "git clone \"$SYSCONFIG_URL\" \"$SYSCONFIG_DIR\""
+    if [ -d "${$SYSCONFIG_DIR}.old/etc/systemd/network" ]; then
+        mkdir -p "${SYSCONFIG_DIR}/etc/systemd/network"
+        cp ${SYSCONFIG_DIR}.old/etc/systemd/network/* "${SYSCONFIG_DIR}/etc/systemd/network/"
+    fi
+    if [ -d "${SYSCONFIG_DIR}.old/etc/udev/rules.d" ]; then
+        mkdir -p "${SYSCONFIG_DIR}/etc/udev/rules.d"
+        cp ${SYSCONFIG_DIR}.old/etc/udev/rules.d/* "${SYSCONFIG_DIR}/etc/udev/rules.d/"
+    fi
     run "rm -rf \"${SYSCONFIG_DIR}/.git\""
     printf "SYSCONFIG=${SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
     chmod 444 "/etc/sysconfig.conf"
