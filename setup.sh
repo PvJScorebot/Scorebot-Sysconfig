@@ -1,11 +1,17 @@
 #!/usr/bin/bash
 
+VERBOSE=0
+
 SCOREBOT_BRANCH=""
 SCOREBOT_DIR="/opt/scorebot"
 SCOREBOT_URL="https://github.com/iDigitalFlame/scorebot-core"
 
 SYSCONFIG_DIR="/opt/sysconfig"
 SYSCONFIG_URL="https://github.com/iDigitalFlame/scorebot-sysconfig"
+
+if [ $# -eq 2 ] && ([ $1 == "-v"] || [ $2 == "-v" ]); then
+    VERBOSE=1
+fi
 
 log() {
     if [ $# -ne 1 ]; then
@@ -16,6 +22,9 @@ log() {
 run() {
     if [ $# -ne 1 ]; then
         return 0
+    fi
+    if [ VERBOSE -eq 1 ]; then
+        printf "[V] Running \"$1\"\n"
     fi
     bash -c "$1; exit \$?"
     if [ $? -ne 0 ]; then
@@ -41,6 +50,7 @@ setup() {
     chmod 444 "/etc/sysconfig.conf"
     log "Initilizing sysconfig.."
     run "rm /etc/hostname" 2> /dev/null
+    run "touch /etc/hostname"
     run "chmod 555 ${SYSCONFIG_DIR}/bin/relink"
     run "chmod 555 ${SYSCONFIG_DIR}/bin/syslink"
     run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / " 1> /dev/null
@@ -75,8 +85,8 @@ setup_db() {
     run "pacman -S mariadb --noconfirm --noprogressbar"
     log "Installing inital database.."
     run "mysql_install_db --basedir=/usr --ldata=/var/lib/mysql --user=mysql" 1> /dev/null
-    run "systemctl enable mysqld" 2> /dev/null
-    run "systemctl start mysqld"
+    run "systemctl enable mariadb" 2> /dev/null
+    run "systemctl start mariadb"
     log "Securing database.."
     run "mysql -u root -e \"DELETE FROM mysql.user WHERE User='';\""
     run "mysql -u root -e \"DELETE FROM mysql.user WHERE User='mysql';\""
@@ -87,7 +97,7 @@ setup_db() {
     run "mysql -u root -e \"CREATE DATABASE scorebot_db;\""
     run "mysql -u root -e \"GRANT ALL ON scorebot_db.* TO 'scorebot'@'scorebot-core' IDENTIFIED BY '$db_scorebot_pw';\""
     run "mysql -u root -e \"UPDATE mysql.global_priv SET priv=json_set(priv, '$.plugin', 'mysql_native_password', '$.authentication_string', PASSWORD('$db_root_pw')) WHERE User='root';\""
-    run "systemctl restart mysqld"
+    run "systemctl restart mariadb"
     log "Database setup complete, please configure the core component to use the supplied password!"
 }
 setup_core() {
@@ -158,9 +168,23 @@ setup_proxy() {
 log "Scorebot Setup v2"
 log "iDigitalFlame, The Scorebot Project 2019"
 
-log "Select the role for this server.."
-printf "[?] Roles:\n\t1: Core\n\t2: DB\n\t3: Proxy\nChoice [1-3]: "
-read sbe_role
+if [ $# -eq 1 ] && [ $1 != "-v" ]; then
+    sbe_role=$1
+fi
+if [ $# -eq 2 ]; then
+    if [ $1 != "-v" ]; then
+        sbe_role=$1
+    fi
+    if [ $2 != "-v" ]; then
+        sbe_role=$2
+    fi
+fi
+
+if [ -z "$sbe_role" ]; then
+    log "Select the role for this server.."
+    printf "[?] Roles:\n\t1: Core\n\t2: DB\n\t3: Proxy\nChoice [1-3]: "
+    read sbe_role
+fi
 
 case $sbe_role in
     1)
@@ -182,6 +206,6 @@ case $sbe_role in
 esac
 
 log "Finilizing with a syslink.."
-run "syslink > /dev/null"
+run "syslink" 1> /dev/null
 log "Done\nHave Fun!"
 exit 0
