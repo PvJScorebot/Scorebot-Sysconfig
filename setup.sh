@@ -45,7 +45,7 @@ setup() {
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
     fi
     run "git clone \"$SYSCONFIG_URL\" \"$SYSCONFIG_DIR\""
-    if [ -d "${$SYSCONFIG_DIR}.old/etc/systemd/network" ]; then
+    if [ -d "${SYSCONFIG_DIR}.old/etc/systemd/network" ]; then
         mkdir -p "${SYSCONFIG_DIR}/etc/systemd/network"
         cp ${SYSCONFIG_DIR}.old/etc/systemd/network/* "${SYSCONFIG_DIR}/etc/systemd/network/"
     fi
