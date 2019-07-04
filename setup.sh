@@ -36,7 +36,7 @@ setup() {
         mv "$SYSCONFIG_DIR" "${SYSCONFIG_DIR}.old"
     fi
     run "git clone \"$SYSCONFIG_URL\" \"$SYSCONFIG_DIR\""
-    printf "SYSCONFIG={$SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
+    printf "SYSCONFIG=${SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
     chmod 444 "/etc/sysconfig.conf"
     log "Initilizing sysconfig.."
     run "bash \"${SYSCONFIG_DIR}/bin/relink\" \"${SYSCONFIG_DIR}\" / 2> /dev/null"
