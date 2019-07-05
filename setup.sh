@@ -33,7 +33,6 @@ run() {
     fi
     return 1
 }
-
 setup() {
     log "Updating system.."
     run "pacman -Syy" 1> /dev/null
