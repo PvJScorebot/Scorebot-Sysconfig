@@ -9,7 +9,7 @@ SCOREBOT_URL="https://github.com/iDigitalFlame/scorebot-core"
 SYSCONFIG_DIR="/opt/sysconfig"
 SYSCONFIG_URL="https://github.com/iDigitalFlame/scorebot-sysconfig"
 
-if [ $# -eq 2 ] && ([ $1 == "-v"] || [ $2 == "-v" ]); then
+if [ $# -ge 1 ] && ([ "$1" == "-v" ] || [ "$2" == "-v" ]); then
     VERBOSE=1
 fi
 
