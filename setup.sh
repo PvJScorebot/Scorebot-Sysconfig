@@ -128,11 +128,11 @@ setup_core() {
     run "mkdir -p \"${SCOREBOT_DIR}/versions\""
     log "Building virtual env.."
     run "virtualenv --always-copy \"${SCOREBOT_DIR}/python\"" 1> /dev/null
-    run "git clone \"$SCOREBOT_URL\" \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\""
+    run "git clone \"$SCOREBOT_URL\" \"${SCOREBOT_DIR}/versions/${SCOREBOT_VERSION}\""
     if ! [ -z "$SCOREBOT_BRANCH" ]; then
-        run "cd \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\"; git checkout $SCOREBOT_BRANCH"
+        run "cd \"${SCOREBOT_DIR}/versions/${SCOREBOT_VERSION}\"; git checkout $SCOREBOT_BRANCH"
     fi
-    run "ln -s \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\" \"${SCOREBOT_DIR}/current\"" 1> /dev/null
+    run "ln -s \"${SCOREBOT_DIR}/versions/${SCOREBOT_VERSION}\" \"${SCOREBOT_DIR}/current\"" 1> /dev/null
     log "Installing PIP requirements.."
     run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; unset PIP_USER; pip install -r requirements.txt" 1> /dev/null
     run "sed -ie 's/\"PASSWORD\": \"password\",/\"PASSWORD\": \"$core_db_pw\",/g' \"${SCOREBOT_DIR}/current/scorebot/settings.py\""
