@@ -46,11 +46,11 @@ setup() {
     run "git clone \"$SYSCONFIG_URL\" \"$SYSCONFIG_DIR\""
     if [ -d "${SYSCONFIG_DIR}.old/etc/systemd/network" ]; then
         mkdir -p "${SYSCONFIG_DIR}/etc/systemd/network"
-        cp ${SYSCONFIG_DIR}.old/etc/systemd/network/* "${SYSCONFIG_DIR}/etc/systemd/network/"
+        cp ${SYSCONFIG_DIR}.old/etc/systemd/network/* "${SYSCONFIG_DIR}/etc/systemd/network/" 2> /dev/null
     fi
     if [ -d "${SYSCONFIG_DIR}.old/etc/udev/rules.d" ]; then
         mkdir -p "${SYSCONFIG_DIR}/etc/udev/rules.d"
-        cp ${SYSCONFIG_DIR}.old/etc/udev/rules.d/* "${SYSCONFIG_DIR}/etc/udev/rules.d/"
+        cp ${SYSCONFIG_DIR}.old/etc/udev/rules.d/* "${SYSCONFIG_DIR}/etc/udev/rules.d/" 2> /dev/null
     fi
     run "rm -rf \"${SYSCONFIG_DIR}/.git\""
     printf "SYSCONFIG=${SYSCONFIG_DIR}\n" > "/etc/sysconfig.conf"
@@ -120,7 +120,7 @@ setup_core() {
         read core_db_ip
     done
     printf "scorebot-core" > "${SYSCONFIG_DIR}/etc/hostname"
-    printf "$proxy_scorcore_db_ipebot_ip\tscorebot-database\n" >> "${SYSCONFIG_DIR}/etc/hosts"
+    printf "$core_db_ip\tscorebot-database\n" >> "${SYSCONFIG_DIR}/etc/hosts"
     log "MySQL Server IP is \"$core_db_ip\", this can be changed in the \"/etc/hosts\" file.."
     log "Installing core dependencies.."
     run "pacman -S apache mod_wsgi python python-pip python-virtualenv python-django gcc mariadb-clients python-mysqlclient --noconfirm --noprogressbar"
