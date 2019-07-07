@@ -4,6 +4,7 @@ VERBOSE=0
 
 SCOREBOT_BRANCH=""
 SCOREBOT_DIR="/opt/scorebot"
+SCOREBOT_VERSION="3.3-atomic"
 SCOREBOT_URL="https://github.com/iDigitalFlame/scorebot-core"
 
 SYSCONFIG_DIR="/opt/sysconfig"
@@ -127,11 +128,11 @@ setup_core() {
     run "mkdir -p \"${SCOREBOT_DIR}/versions\""
     log "Building virtual env.."
     run "virtualenv --always-copy \"${SCOREBOT_DIR}/python\"" 1> /dev/null
-    run "git clone \"$SCOREBOT_URL\" \"${SCOREBOT_DIR}/version/release\""
+    run "git clone \"$SCOREBOT_URL\" \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\""
     if ! [ -z "$SCOREBOT_BRANCH" ]; then
-        run "cd \"${SCOREBOT_DIR}/version/release\"; git checkout $SCOREBOT_BRANCH"
+        run "cd \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\"; git checkout $SCOREBOT_BRANCH"
     fi
-    run "ln -s \"${SCOREBOT_DIR}/version/release\" \"${SCOREBOT_DIR}/current\"" 1> /dev/null
+    run "ln -s \"${SCOREBOT_DIR}/version/${SCOREBOT_VERSION}\" \"${SCOREBOT_DIR}/current\"" 1> /dev/null
     log "Installing PIP requirements.."
     run "source \"${SCOREBOT_DIR}/python/bin/activate\"; cd \"${SCOREBOT_DIR}/current\"; unset PIP_USER; pip install -r requirements.txt" 1> /dev/null
     run "sed -ie 's/\"PASSWORD\": \"password\",/\"PASSWORD\": \"$core_db_pw\",/g' \"${SCOREBOT_DIR}/current/scorebot/settings.py\""
@@ -144,7 +145,7 @@ setup_core() {
     run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/core.conf\" \"/etc/httpd/conf/scorebot-role.conf\"" 1> /dev/null
     run "ln -s /usr/lib/python3.*/site-packages/django/contrib/admin/static/admin \"${SCOREBOT_DIR}/current/scorebot_static/admin\"" 1> /dev/null
     run "chown root:http -R \"${SCOREBOT_DIR}\""
-    run "chmod 550 -R \"${SCOREBOT_DIR}/currebt\""
+    run "chmod 550 -R \"${SCOREBOT_DIR}/current\""
     run "mkdir -p \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chown http:http \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chmod 775 \"${SCOREBOT_DIR}/current/scorebot_media\""
