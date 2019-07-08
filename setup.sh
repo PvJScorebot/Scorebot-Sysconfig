@@ -149,6 +149,13 @@ setup_core() {
     run "mkdir -p \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chown http:http \"${SCOREBOT_DIR}/current/scorebot_media\""
     run "chmod 775 \"${SCOREBOT_DIR}/current/scorebot_media\""
+    printf '[Unit]\nDescription     = Scorebot Daemon\nAfter           = syslog.target httpd.service\n' > "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    printf 'Wants           = network-online.target httpd.service\n\n' >> "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    printf '[Service]\nType            = simple\nUser            = http\nGroup           = http\n' >> "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    printf 'ExecStart       = /usr/bin/bash -c "source $PYDIR/bin/activate; python3 $SCOREBOT/daemon.py"\nKillSignal      = SIGINT\n' >> "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    printf "Environment     = \"PYDIR=${SCOREBOT_DIR}/python\"\nEnvironment     = \"SCOREBOT=${SCOREBOT_DIR}/current\"\n" >> "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    printf 'ProtectHome     = true\nProtectSystem   = true\n\n[Install]\nWantedBy        = multi-user.target\n' >> "${SYSCONFIG_DIR}/etc/systemd/systemd/scorebot.service"
+    run "rm -rf /tmp/scorebot3"
     run "systemctl enable httpd.service" 2> /dev/null
     run "systemctl enable scorebot.service" 2> /dev/null
     run "systemctl start httpd.service"
@@ -173,7 +180,7 @@ setup_proxy() {
     log "Proxy setup complete, please ensure to configure the core component!"
 }
 
-log "Scorebot Setup v2"
+log "Scorebot Setup v2.5"
 log "iDigitalFlame, The Scorebot Project 2019"
 
 if [ $# -eq 1 ] && [ $1 != "-v" ]; then
