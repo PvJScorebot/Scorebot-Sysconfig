@@ -175,6 +175,7 @@ setup_proxy() {
     run "pacman -S apache --noconfirm --noprogressbar"
     log "Enabling and starting Apache proxy..."
     run "ln -s \"${SYSCONFIG_DIR}/etc/httpd/conf/roles/proxy.conf\" \"/etc/httpd/conf/scorebot-role.conf\"" 1> /dev/null
+    run "sed -ie 's/LoadModule wsgi_module/# LoadModule wsgi_module/g' \"/etc/httpd/conf/httpd.conf\""
     run "systemctl enable httpd.service" 2> /dev/null
     run "systemctl start httpd.service"
     log "Proxy setup complete, please ensure to configure the core component!"
