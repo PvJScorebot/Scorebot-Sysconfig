@@ -3,8 +3,8 @@
 VERBOSE=0
 
 SCOREBOT_BRANCH=""
+SCOREBOT_VERSION="v3.3"
 SCOREBOT_DIR="/opt/scorebot"
-SCOREBOT_VERSION="3.3-atomic"
 SCOREBOT_URL="https://github.com/iDigitalFlame/scorebot-core"
 
 SYSCONFIG_DIR="/opt/sysconfig"
