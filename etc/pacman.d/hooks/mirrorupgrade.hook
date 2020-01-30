@@ -1,10 +1,26 @@
+# Copyright (C) 2020 iDigitalFlame
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
 [Trigger]
 Type        = Package
 Target      = pacman-mirrorlist
 Operation   = Upgrade
 
 [Action]
-Description = Updating pacman-mirrorlist with reflector and removing pacnew..
 When        = PostTransaction
 Exec        = /usr/bin/bash -c "reflector --protocol https --latest 30 --number 20 --sort rate --threads 5 --country 'United States' --save /etc/pacman.d/mirrorlist; if [[ -f /etc/pacman.d/mirrorlist.pacnew ]]; then rm /etc/pacman.d/mirrorlist.pacnew; fi"
 Depends     = reflector
+Description = Updating pacman-mirrorlist with reflector and removing pacnew..

@@ -1,11 +1,38 @@
+# Copyright (C) 2020 iDigitalFlame
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
 [Unit]
-Description = Pacman Mirrorlist Update Service
-After       = network-online.target systemd-resolved.service
-Requires    = network-online.target systemd-resolved.service
+After                   = network-online.target systemd-resolved.service
+Requires                = network-online.target systemd-resolved.service
+Description             = Pacman Mirrorlist Update Service
 
 [Service]
-Type        = simple
-ExecStart   = /usr/bin/reflector --protocol https --latest 30 --number 20 --sort rate --threads 5 --country 'United States' --save /etc/pacman.d/mirrorlist
+Type                    = simple
+ExecStart               = /usr/bin/reflector --protocol https --latest 30 --number 20 --sort rate --threads 5 --country 'United States' --save /etc/pacman.d/mirrorlist
+PrivateTmp              = true
+ProtectHome             = true
+ProtectSystem           = false
+PrivateDevices          = true
+RestrictRealtime        = true
+ProtectKernelLogs       = true
+RestrictNamespaces      = true
+ProtectControlGroups    = true
+ProtectKernelModules    = true
+ProtectKernelTunables   = true
+RestrictAddressFamilies = AF_INET AF_INET6 AF_NETLINK AF_UNIX
 
 [Install]
-RequiredBy  = multi-user.target
+RequiredBy              = multi-user.target
